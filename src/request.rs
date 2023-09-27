@@ -12,6 +12,7 @@ pub enum RequestMethod {
 }
 
 pub enum RequestError  {
+    BadRequest,
     UnknownMethod(String)
 }
 
@@ -35,7 +36,7 @@ pub struct Request {
 }
 
 impl Request {
-    fn new() -> Request {
+    pub fn new() -> Request {
         Request {
             method: None
         }
