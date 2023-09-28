@@ -10,7 +10,9 @@ pub enum StreamError {
 }
 
 impl Stream<'_> {
-    pub fn get_next_request(&mut self) -> std::io::Result<Request> {
+    // Result encapsulates any I/O errors.
+    // Option encapsulates any parsing errors.
+    pub fn get_next_request(&mut self) -> std::io::Result<Option<Request>> {
         let mut buffer: [u8; 1024] = [0; 1024];
         let mut message = String::new();
 
@@ -29,9 +31,7 @@ impl Stream<'_> {
             if message.contains("\r\n\r\n") { break; }
         }
 
-        println!("{}", message);
-
-        Ok(Request::new())
+        Ok(Request::from_string(message))
     }
 
     pub fn write(&mut self, message: &str) -> std::io::Result<()> {

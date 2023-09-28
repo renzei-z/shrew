@@ -1,59 +1,28 @@
-use std::fmt;
-
-pub enum RequestMethod {
-    GET,
-    OPTIONS,
-    HEAD,
-    POST,
-    PUT,
-    DELETE,
-    TRACE,
-    CONNECT
-}
-
-pub enum RequestError  {
-    BadRequest,
-    UnknownMethod(String)
-}
-
-impl fmt::Display for RequestMethod {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", match self {
-            RequestMethod::GET => "GET",
-            RequestMethod::POST => "POST",
-            RequestMethod::CONNECT => "CONNECT",
-            RequestMethod::TRACE => "TRACE",
-            RequestMethod::DELETE => "DELETE",
-            RequestMethod::PUT => "PUT",
-            RequestMethod::HEAD => "HEAD",
-            RequestMethod::OPTIONS => "OPTIONS"
-        })
-    }
-}
-
+#[derive(Default)]
 pub struct Request {
-    method: Option<RequestMethod>
+    // TODO: Turn this into an enum
+    method: String,
+    pub request_uri: String
 }
 
 impl Request {
-    pub fn new() -> Request {
-        Request {
-            method: None
-        }
-    }
+    // TODO: Use a Result with a custom error type.
+    pub fn from_string(string: String) -> Option<Request> {
+        let mut request = Request::default();
 
-    pub fn from_string(_string: String) -> Result<Request, RequestError> {
-        let request = Request::new();
+        // TODO: For now, we are *assuming* that the HTTP request is
+        // valid; i.e. the first line contains the method and route.
+        // This is obviously insecure, and will be fixed soon after
+        // simple routing and header reading is implemented.
 
-        Ok(request)
-    }
+        // The naming for variables in this section comes from RFC 2616. (HTTP)
+        let request_line = string.split_at(string.find("\r\n").unwrap()).0;
 
-    pub fn pretty_print(&self) {
-        println!("Request: {{");
-        println!("\tMethod: {}", match &self.method {
-            Some(m) => format!("{}", m),
-            None => "Unknown".to_string()
-        });
-        println!("}}");
+        // request_line.0 should contain 'Method SP Request-URI SP HTTP-Version'
+        let split_request_line: Vec<_> = request_line.split(' ').collect();
+
+        request.request_uri = split_request_line[1].to_string();
+
+        Some(request)
     }
 }
