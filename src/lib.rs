@@ -9,5 +9,5 @@ pub mod response;
 /// The main wrapper through which the
 /// end user interacts with shrew.
 pub struct App {
-    routes: Vec<Box<dyn Fn(Request, Response) -> Response>>
+    routes: Vec<Box<dyn FnMut(Request, Response) -> std::io::Result<()>>>
 }

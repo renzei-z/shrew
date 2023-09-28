@@ -12,7 +12,7 @@ impl App {
         }
     }
 
-    pub fn register_route(&mut self, route: &str, closure: Box<dyn Fn(Request, Response) -> Response>) {
+    pub fn register_route(&mut self, route: &str, closure: Box<dyn FnMut(Request, Response) -> std::io::Result<()>>) {
         self.routes.push(closure);
     }
 
@@ -28,14 +28,12 @@ impl App {
 
         // Just use the first route for now, since routing is not
         // implemented.
-        let route = match self.routes.pop() {
+        let route = match self.routes.get_mut(0) {
             None => panic!("No routes have been registered. Please use the command 'app.register_route' to register one before proceeding."),
             Some(r) => r
         };
 
-        //route(request, Response::new(&mut stream));
-
-        Ok(())
+        route(request, Response::new(stream))
     }
 
     pub fn bind_localhost(&mut self, port: usize) -> std::io::Result<()> {

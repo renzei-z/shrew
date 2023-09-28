@@ -35,7 +35,8 @@ impl Stream<'_> {
     }
 
     pub fn write(&mut self, message: &str) -> std::io::Result<()> {
-        write!(self.0, "{}", message)
+        write!(self.0, "{}", message)?;
+        self.0.flush()
     }
 
     pub fn close(&mut self) -> std::io::Result<()> {
