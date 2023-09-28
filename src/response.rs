@@ -26,15 +26,21 @@ impl<'r> Response<'r> {
         self.headers.push((header.to_string(), value.to_string()));
         self
     }
-    
-    pub fn send_empty(mut self) -> std::io::Result<()> {
+
+    fn send_head(mut self) -> std::io::Result<Self> {
         self.stream.write(&format!("HTTP/1.1 {}\r\n", self.status_code))?;
 
-        for (header, value) in self.headers {
+        for (header, value) in &self.headers {
             self.stream.write(&format!("{}: {}\r\n", header, value))?;
         }
 
         self.stream.write("\r\n")?;
+
+        Ok(self)
+    }
+    
+    pub fn send_empty(mut self) -> std::io::Result<()> {
+        self = self.send_head()?;
 
         self.stream.close()?;
 
@@ -47,5 +53,18 @@ impl<'r> Response<'r> {
         // TODO: Validate status code
         self.status_code = status; 
         self.send_empty()
+    }
+
+    pub fn send(mut self, bytes: &[u8]) -> std::io::Result<()> {
+        self = self.send_head()?;
+
+        self.stream.write(std::str::from_utf8(bytes).unwrap())?;
+
+        self.stream.write("\r\n\r\n")?;
+
+        self.stream.close()?;
+        self.finished = true;
+
+        Ok(())
     }
 }
