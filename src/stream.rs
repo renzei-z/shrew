@@ -1,5 +1,4 @@
-use crate::request::{Request, RequestError};
-use crate::Error;
+use crate::request::Request;
 
 use std::io::prelude::*;
 use std::net::{ TcpStream, Shutdown };
@@ -11,7 +10,7 @@ pub enum StreamError {
 }
 
 impl Stream<'_> {
-    pub fn get_next_request(&mut self) -> Result<Request, Error> {
+    pub fn get_next_request(&mut self) -> std::io::Result<Request> {
         let mut buffer: [u8; 1024] = [0; 1024];
         let mut message = String::new();
 
@@ -19,9 +18,7 @@ impl Stream<'_> {
             let byte_count = match self.0.read(&mut buffer) {
                 Ok(count) => count,
                 Err(_e) => {
-                    return Err(
-                        Error::RequestError(RequestError::BadRequest)
-                    );
+                    panic!("Error reading request into buffer. Quitting.");
                 }
             };
 
