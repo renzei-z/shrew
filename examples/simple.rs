@@ -1,18 +1,18 @@
 extern crate shrew;
-use shrew::App;
+use shrew::prelude::*;
 
-fn main() -> std::io::Result<()> {
-    let mut app = App::new();
+fn index(_req: Request, res: Response) -> RouteResult<'_> {
+    res.set_status(200).send("200 OK")
+}
 
-    app.register_route("/", Box::new(|_req, res| {
-        res.send(b"Hello, world!")
-    }));
+fn on_listen() {
+    println!("[INFO] Listening on port 80...");
+}
 
-    app.register_route("/test", Box::new(|_req, res| {
-        res.send(b"Test Route!")
-    }));
+fn main() -> ServerResult {
+    let mut server = Server::new();
 
-    app.bind_localhost(8080)?;
+    server.get("/", index)?;
 
-    Ok(())
+    server.localhost(80, on_listen)
 }

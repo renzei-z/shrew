@@ -6,3 +6,7 @@ edition = "2021"
 [[example]]
 name = "simple"
 path = "examples/simple.rs"
+
+[dependencies]
+regex = "1.9.5"
+tokio = "1.32.0"

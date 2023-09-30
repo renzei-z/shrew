@@ -1,28 +1,65 @@
-#[derive(Default)]
+use regex::Regex;
+use std::collections::HashMap;
+
+type Headers = HashMap<String, String>;
+
+#[derive(Debug)]
 pub struct Request {
-    // TODO: Turn this into an enum
-    method: String,
-    pub request_uri: String
+    _method: String,
+    pub request_uri: String,
+    _headers: Headers
 }
 
-impl Request {
-    // TODO: Use a Result with a custom error type.
-    pub fn from_string(string: String) -> Option<Request> {
-        let mut request = Request::default();
+// Request structure (as per section 5 of RFC 2616)
+// https://www.rfc-editor.org/rfc/rfc2616#section-5
+//
+// Request-Line
+//        -> Method SP Request-URI SP HTTP-Version CRLF
+// *(( general-header 
+//      | request-header
+//      | entity-header ) CRLF )
+// CRLF
+// [message-body] <- Ignored for now.
 
-        // TODO: For now, we are *assuming* that the HTTP request is
-        // valid; i.e. the first line contains the method and route.
-        // This is obviously insecure, and will be fixed soon after
-        // simple routing and header reading is implemented.
+impl TryFrom<String> for Request {
+    type Error = String;
 
-        // The naming for variables in this section comes from RFC 2616. (HTTP)
-        let request_line = string.split_at(string.find("\r\n").unwrap()).0;
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        // TODO: Don't compile regexes on every request.
+        let request_line_re: Regex = Regex::new(r"([A-Z]+) (\/[^\s]*) HTTP\/(1|1.1|2)\r\n").unwrap();
 
-        // request_line.0 should contain 'Method SP Request-URI SP HTTP-Version'
-        let split_request_line: Vec<_> = request_line.split(' ').collect();
+        let (method, uri, _version) = match request_line_re.captures(&value) {
+            Some(re) => (
+                re.get(1).unwrap().as_str(),
+                re.get(2).unwrap().as_str(),
+                re.get(3).unwrap().as_str()
+            ),
+            // TODO: This below should end up with the server returning a HTTP 400 (Bad Request)
+            None => return Err("Couldn't compile".to_string())
+        };
 
-        request.request_uri = split_request_line[1].to_string();
+        let mut headers: Headers = HashMap::new();
 
-        Some(request)
+        for line in value.lines().skip(1).into_iter() {
+            if line == "\r\n" {
+                // Hit body or end.
+                break;
+            }
+            
+            let (name, value) = match line.split_once(": ") {
+                Some(s) => s,
+                None => continue
+            };
+
+            headers.insert(name.to_string(), value.to_string());
+        }
+
+        // TODO: Read Content-Length from the header here and then continue reading.
+
+        Ok(Request {
+            _method: method.to_string(),
+            request_uri: uri.to_string(),
+            _headers: headers
+        })
     }
 }
