@@ -37,7 +37,6 @@ impl Server {
             None => return
         };
 
-        // For now, just serve a basic message no matter what.
         // TODO: Fix the fact we have to make a second struct??
         let response = Response::new(Stream::from_stream(tcp_stream));
         self.route(request, response).unwrap();
