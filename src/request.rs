@@ -7,7 +7,8 @@ type Headers = HashMap<String, String>;
 pub struct Request {
     _method: String,
     pub request_uri: String,
-    _headers: Headers
+    _headers: Headers,
+    pub params: HashMap<String, String>
 }
 
 // Request structure (as per section 5 of RFC 2616)
@@ -59,7 +60,8 @@ impl TryFrom<String> for Request {
         Ok(Request {
             _method: method.to_string(),
             request_uri: uri.to_string(),
-            _headers: headers
+            _headers: headers,
+            params: HashMap::new()
         })
     }
 }
