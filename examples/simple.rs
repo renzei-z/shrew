@@ -7,8 +7,8 @@ fn index(_req: Request, res: Response) -> RouteResult<'_> {
 
 fn item(req: Request, res: Response) -> RouteResult<'_> {
     match req.params.get("id") {
-        Some(id) if id.parse::<usize>().unwrap() < 5 => res.send(&format!("Found item {id}")),
-        _ => res.set_status(404).send("404 Not Found")
+        Some(id) if id.parse::<usize>().unwrap() < 5 => res.set_status(201).send(&format!("Created item {id}")),
+        _ => res.set_status(400).send("400 Bad Request")
     }
 }
 
@@ -20,7 +20,7 @@ fn main() -> ServerResult {
     let mut server = Server::new();
 
     server.get("/", index)?;
-    server.get("/%id", item)?;
+    server.post("/%id", item)?;
 
     server.localhost(80, on_listen)
 }

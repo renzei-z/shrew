@@ -3,11 +3,12 @@ mod stream;
 use super::{ request::Request, response::Response };
 
 use std::net::{ TcpListener, TcpStream };
+use std::collections::HashMap;
 pub use self::routing::RouteResult;
 pub use self::stream::Stream;
 
 pub struct Server {
-    routes: Vec<(String, RoutingFunction)>,
+    routes: HashMap<String, Vec<(String, RoutingFunction)>>,
     fallback_route: RoutingFunction
 }
 
@@ -24,7 +25,7 @@ mod routing;
 impl Server {
     pub fn new() -> Self {
         Server {
-            routes: Vec::new(),
+            routes: HashMap::new(),
             fallback_route: routing::default_fallback_route
         }
     }

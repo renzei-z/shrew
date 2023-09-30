@@ -6,9 +6,13 @@ pub type RouteResult<'r> = std::io::Result<Response<'r>>;
 
 // HashMap that can be returned is a map of all parameters
 fn match_uri(uri: &str, route: &str) -> (bool, Option<HashMap<String, String>>) {
+    println!("INFO: Trying {} with {}", uri, route);
+
     if uri == route {
         return (true, None);
     }
+
+    // TODO: / matches with /%id for some reason?
 
     // / -> []
     // /%id -> ["%id"]
@@ -46,16 +50,49 @@ pub fn default_fallback_route(_req: Request, res: Response) -> RouteResult<'_> {
 
 impl Server {
     pub fn get(&mut self, route: &str, response: RoutingFunction) -> ServerResult {
-        if self.routes.iter().any(|r| r.0 == route.to_string()) {
+        let get_vec = match self.routes.get_mut("GET") {
+            Some(vec) => vec,
+            None => {
+                self.routes.insert("GET".to_string(), Vec::new());
+                self.routes.get_mut("GET").unwrap()
+            }
+        };
+
+        if get_vec.iter().any(|r| r.0 == route.to_string()) {
             return Err(ServerError::DuplicateRoute(route.to_string()));
         }
-        self.routes.push((route.to_string(), response));
+        get_vec.push((route.to_string(), response));
+
         Ok(())
     }
 
+    pub fn post(&mut self, route: &str, response: RoutingFunction) -> ServerResult {
+        let post_vec = match self.routes.get_mut("POST") {
+            Some(vec) => vec,
+            None => {
+                self.routes.insert("POST".to_string(), Vec::new());
+                self.routes.get_mut("POST").unwrap()
+            }
+        };
+
+        if post_vec.iter().any(|r| r.0 == route.to_string()) {
+            return Err(ServerError::DuplicateRoute(route.to_string()));
+        }
+        post_vec.push((route.to_string(), response));
+
+        Ok(())
+    }
+    
     pub(crate) fn route<'r>(&'r mut self, mut req: Request, res: Response<'r>) -> RouteResult<'r> {
         // TODO: Caching?
-        for route in self.routes.iter() {
+        let vec = self.routes.get(&req.method);
+
+        if vec.is_none() {
+            // This method is not registered with any route.
+            return (self.fallback_route)(req, res);
+        }
+
+        for route in vec.unwrap().iter() {
             if let (true, p) = match_uri(&req.request_uri, &route.0) {
                 if let Some(params) = p {
                     req.params.extend(params);

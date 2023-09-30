@@ -5,7 +5,7 @@ type Headers = HashMap<String, String>;
 
 #[derive(Debug)]
 pub struct Request {
-    _method: String,
+    pub method: String,
     pub request_uri: String,
     _headers: Headers,
     pub params: HashMap<String, String>
@@ -58,7 +58,7 @@ impl TryFrom<String> for Request {
         // TODO: Read Content-Length from the header here and then continue reading.
 
         Ok(Request {
-            _method: method.to_string(),
+            method: method.to_string(),
             request_uri: uri.to_string(),
             _headers: headers,
             params: HashMap::new()
