@@ -6,18 +6,15 @@ pub type RouteResult<'r> = std::io::Result<Response<'r>>;
 
 // HashMap that can be returned is a map of all parameters
 fn match_uri(uri: &str, route: &str) -> (bool, Option<HashMap<String, String>>) {
-    println!("INFO: Trying {} with {}", uri, route);
-
     if uri == route {
         return (true, None);
     }
 
-    // TODO: / matches with /%id for some reason?
+    let mut split_route: Vec<&str> = route.split("/").collect();
+    let mut split_uri: Vec<&str> = uri.split("/").collect();
 
-    // / -> []
-    // /%id -> ["%id"]
-    let split_route: Vec<&str> = route.split("/").collect();
-    let split_uri: Vec<&str> = uri.split("/").collect();
+    // split_uri.retain(|s| *s != "");
+    // split_route.retain(|s| *s != "");
 
     if split_route.len() != split_uri.len() {
         return (false, None);
@@ -29,6 +26,12 @@ fn match_uri(uri: &str, route: &str) -> (bool, Option<HashMap<String, String>>) 
     for (subroute, suburi) in split_route.iter().zip(split_uri.iter()) {
         if subroute.starts_with("%") {
             let param_name = subroute.split_at(1).1;
+            if *suburi == "" {
+                // Then there's nothing here, such as
+                // index &["", ""] and &["", "%id"]
+                matches = false;
+                break;
+            }
             params.insert(param_name.to_string(), suburi.to_string());
             continue;
         }
