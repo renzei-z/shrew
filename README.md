@@ -8,17 +8,21 @@ A simple web server that returns a 200 OK on `/`:
 
 ```rust
 extern crate shrew;
-use shrew::App;
+use shrew::prelude::*;
 
-fn main() -> std::io::Result<()> {
-    let mut app = App::new();
+fn index(_req: Request, res: Response) -> RouteResult<'_> {
+    res.set_status(200).send("200 OK")
+}
 
-    app.register_route("/", Box::new(|_req, res| {
-        res.send_status(200)
-    }));    
+fn on_listen() {
+    println!("[INFO] Listening on port 80...");
+}
 
-    app.bind_localhost(8080)?;
+fn main() -> ServerResult {
+    let mut server = Server::new();
 
-    Ok(())
+    server.get("/", index)?;
+
+    server.localhost(80, on_listen)
 }
 ```
